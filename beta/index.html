@@ -724,6 +724,42 @@
     };
   }
 
+  // Fully seal the corridor ABOVE the top gate and BELOW the bottom gate.
+  // Tight vertical packing in the flight lane so you cannot slip around.
+  function sealBlockers(gapY, gap) {
+    const topEdge = gapY - gap / 2 - PLANET_R * 2;
+    const botEdge = gapY + gap / 2 + PLANET_R * 2;
+    const blockers = [];
+    // Step small enough that obstacle radii overlap the flight path
+    const step = 30;
+    // From just above top planet → screen top
+    {
+      let y = topEdge - 26;
+      let n = 0;
+      while (y > 20) {
+        // tiny lateral jitter only — stay in the lane
+        const xOff = ((n % 2) * 2 - 1) * (2 + Math.random() * 5);
+        blockers.push(makeObstacle(y, xOff));
+        y -= step;
+        n++;
+        if (n > 12) break; // safety
+      }
+    }
+    // From just below bottom planet → screen bottom
+    {
+      let y = botEdge + 26;
+      let n = 0;
+      while (y < H - 20) {
+        const xOff = ((n % 2) * 2 - 1) * (2 + Math.random() * 5);
+        blockers.push(makeObstacle(y, xOff));
+        y += step;
+        n++;
+        if (n > 12) break;
+      }
+    }
+    return blockers;
+  }
+
   function spawnPair(x) {
     const d = difficulty();
     // Main gap UNCHANGED — only seal the around-path above/below
@@ -755,41 +791,7 @@
     lastGapY = gapCenter;
     const kindA = Math.floor(Math.random() * 16);
     const kindB = Math.floor(Math.random() * 16);
-    const topY = gapCenter - gap / 2 - PLANET_R;
-    const botY = gapCenter + gap / 2 + PLANET_R;
-    // Fully seal the corridor ABOVE the top gate and BELOW the bottom gate.
-    // Tight vertical packing in the flight lane so you cannot slip around.
-    const blockers = [];
-    const topEdge = topY - PLANET_R;
-    const botEdge = botY + PLANET_R;
-    // Step small enough that obstacle radii overlap the flight path
-    const step = 30;
-
-    // From just above top planet → screen top
-    {
-      let y = topEdge - 26;
-      let n = 0;
-      while (y > 20) {
-        // tiny lateral jitter only — stay in the lane
-        const xOff = ((n % 2) * 2 - 1) * (2 + Math.random() * 5);
-        blockers.push(makeObstacle(y, xOff));
-        y -= step;
-        n++;
-        if (n > 12) break; // safety
-      }
-    }
-    // From just below bottom planet → screen bottom
-    {
-      let y = botEdge + 26;
-      let n = 0;
-      while (y < H - 20) {
-        const xOff = ((n % 2) * 2 - 1) * (2 + Math.random() * 5);
-        blockers.push(makeObstacle(y, xOff));
-        y += step;
-        n++;
-        if (n > 12) break;
-      }
-    }
+    const blockers = sealBlockers(gapCenter, gap);
     const pair = {
       x, gapY: gapCenter, gap, r: PLANET_R,
       topKind: kindA, botKind: kindB, scored: false,
@@ -1131,77 +1133,88 @@
   //  - anywhere else it's a DIVE tap — the downward mirror of the flap,
   //    added so floaty runs (Pocket Moon) can push down on demand.
   function startTutorial() {
-    tut = { stage: 'intro', hold: false, t: 0, g0: 0, g1: 0, gD: 0, nudge: 0, retries: 0, springs: 0 };
+    tut = { stage: 'intro', hold: false, t: 0, g0: 0, g1: 0, gD: 0, nudge: 0, springs: 0 };
     tutPending = false;
+    buildTutorialCourse();
   }
   function tutSafe() { return !!tut && tut.stage !== 'free'; }
   function tutBuddy() { return !!tut && (tut.stage === 'pal' || tut.stage === 'palDemo'); }
 
-  // The guided opening is fully choreographed: taps are IGNORED while
-  // gliding, so from the second tap the arc is pure ballistics and the
-  // landing point is computable. These two stagers move real gates to the
-  // computed points — the bounce and the dive land where we calculated,
-  // every time, for every pilot.
   function tutGrav() {
     // an existing pilot may replay with a pal equipped — match live physics
     return GRAVITY * (save.equippedPal === 'pocketmoon' ? 0.85
                     : save.equippedPal === 'nutsack' ? 1.2 : 1);
   }
 
-  // Called at the SECOND guided tap: predict where the fall lands ~0.9s
-  // out and park the nearest planet pair so its bottom surface sits
-  // exactly there when the squirrel arrives.
-  function stageTutorialBounce() {
+  // ——— THE SCRIPTED COURSE ———
+  // One fixed environment, laid out in full before the first tap. The
+  // world freezes under every prompt and glide taps are ignored, so the
+  // guided beats fly ONE deterministic trajectory — computable up front:
+  //   flap · 0.8s · [TAP] flap · 0.55s · [TAP AGAIN] flap · 0.9s glide
+  //   → touchdown on the bounce planet → spring −640 to the apex freeze
+  //   → [SWIPE] → dive into the gate already waiting below.
+  // Nothing is moved, restaged or conjured mid-flight — the pilot sees
+  // the whole road ahead, exactly like a real run.
+  function buildTutorialCourse() {
+    planets = [];
+    acorns = [];
+    powerups = []; shields = []; goldens = []; blackholes = []; wormholes = [];
     const sx = W * SQUIRREL_X;
-    // predict from the CURRENT velocity, so a mid-glide re-aim (after a
-    // missed touchdown) is just as exact as the first staging
-    const tA = 0.9;                          // seconds until touchdown
-    const yPred = squirrel.y + squirrel.vy * tA + 0.5 * tutGrav() * tA * tA;
-    const margin = 70;
-    let target = null;
-    for (const p of planets) {
-      if (p.x < sx + 40) continue;
-      if (!target || p.x < target.x) target = p;
+    const g = tutGrav();
+    const fv = FLAP * (save.equippedPal === 'nutsack' ? 0.71 : 1);
+    const arc = (v, t) => v * t + 0.5 * g * t * t;
+    const gap = 176;                      // a touch friendlier while learning
+    const clampY = (y) => Math.max(70 + gap / 2, Math.min(H - 70 - gap / 2, y));
+    const y0 = H * 0.45;                  // the squirrel's start line
+    const y1 = y0 + arc(fv, 0.8);         // at the TAP prompt
+    const y2 = y1 + arc(fv, 0.55);        // at the TAP AGAIN prompt
+    const tLand = 0.9;
+    const yLand = y2 + arc(fv, tLand);    // the fall meets the planet here
+    const dLand = BASE_SPEED * (0.8 + 0.55 + tLand);
+    const tApex = (640 - 60) / g;         // spring −640 up to the vy>−60 freeze
+    const yApex = yLand - (640 * tApex - 0.5 * g * tApex * tApex);
+    const dApex = dLand + BASE_SPEED * tApex;
+    // the recovery gate: as deep below the apex as the screen allows
+    const dyDive = Math.max(120, Math.min(352, (H - 70 - gap / 2) - yApex - 20));
+    const tDive = (-380 + Math.sqrt(380 * 380 + 2 * g * dyDive)) / g;
+    const mk = (dist, gapY, sealed) => {
+      const pair = {
+        x: sx + dist, gapY: clampY(gapY), gap, r: PLANET_R,
+        topKind: Math.floor(Math.random() * 16),
+        botKind: Math.floor(Math.random() * 16),
+        scored: false,
+        blockers: sealed ? sealBlockers(clampY(gapY), gap) : [],
+      };
+      planets.push(pair);
+      return pair;
+    };
+    // 1 — the bounce planet: bottom surface exactly on the touchdown point
+    mk(dLand, yLand + 6 - gap / 2, false);
+    // 2 — the dive gate, sitting low, visible ahead from the apex freeze
+    const d2 = dApex + BASE_SPEED * tDive;
+    const p2 = mk(d2, yApex + dyDive, false);
+    // 3–7 — practice gates: a climb back to the flight line, then gentle
+    // alternation; full debris seals so they read as REAL gates (the
+    // tutorial's resets protect every mistake)
+    const path = [y0 + 80, y0 - 40, y0 + 60, y0 - 20, y0 + 40];
+    let d = d2;
+    const rest = [];
+    for (const yy of path) {
+      d += 260;
+      rest.push(mk(d, yy, true));
     }
-    if (!target) return;
-    target.x = sx + speed * tA;              // arrive right on cue
-    // bottom-planet surface (the gap's lower edge) at the fall point
-    target.gapY = Math.max(margin + target.gap / 2,
-                  Math.min(H - margin - target.gap / 2,
-                           yPred + 6 - target.gap / 2));
-    target.blockers = [];                    // nothing between pilot and lesson
-    // push the following pair out of the bounce's way — the swipe stage
-    // will place it precisely when the moment comes
-    let next = null;
-    for (const p of planets) {
-      if (p.x <= target.x + 40) continue;
-      if (!next || p.x < next.x) next = p;
+    // acorns: centred through the lesson, pushed off the flight line on
+    // the last two gates so the Buddy has something to visibly reel in
+    acorns.push({ x: p2.x + 8, y: p2.gapY, got: false,
+                  bob: Math.random() * Math.PI * 2 });
+    for (let i = 0; i < rest.length; i++) {
+      const off = i >= 3 ? (i % 2 ? -1 : 1) * 85 : 0;
+      acorns.push({ x: rest[i].x + 8, y: rest[i].gapY + off, got: false,
+                    bob: Math.random() * Math.PI * 2 });
     }
-    if (next && next.x < target.x + 320) next.x = target.x + 320;
-  }
-
-  // Called at the swipe itself (the world is frozen under the prompt, so
-  // this is the exact apex): the dive is again pure ballistics — move the
-  // next gate to the recovery point, one leveling tap away.
-  function stageTutorialDive() {
-    const sx = W * SQUIRREL_X;
-    const tA = 0.5;                          // seconds of dive to the gate
-    const yPred = squirrel.y + 380 * tA + 0.5 * tutGrav() * tA * tA;
-    const margin = 70;
-    let target = null;
-    for (const p of planets) {
-      if (p.x < sx + 40) continue;
-      if (!target || p.x < target.x) target = p;
-    }
-    if (!target) return;
-    target.x = sx + speed * tA;
-    let want = Math.max(margin + target.gap / 2,
-               Math.min(H - margin - target.gap / 2, yPred));
-    // the dive gate must sit BELOW the pilot — that's the whole lesson
-    want = Math.max(want, Math.min(H - margin - target.gap / 2,
-                                   squirrel.y + 60));
-    target.gapY = want;
-    target.blockers = [];
+    // hand the reins to the normal spawner beyond the course
+    lastSpawnX = d;
+    lastGapY = rest[rest.length - 1].gapY;
   }
 
   function tickTutorial(dt) {
@@ -1217,20 +1230,13 @@
         // make the demo launch cinematic — a strong, readable spring
         squirrel.vy = -640;
       } else if (tut.t > 1.6) {
-        // touchdown was due at 0.9s — it missed, so re-aim from wherever
-        // the squirrel is now. After a few tries, spring them up anyway:
-        // the swipe prompt must always arrive with the pilot up HIGH,
-        // never near the floor with the gate sitting overhead.
-        if (tut.retries < 3) {
-          tut.retries += 1;
-          stageTutorialBounce();
-          tut.t = 0.7;                       // next arrival ~0.9s out
-        } else {
-          tut.bounced = true;
-          tut.stage = 'bounce'; tut.t = 0;
-          bounceUp = false;
-          squirrel.vy = -640;
-        }
+        // the touchdown was due at 0.9s — a missed beat (odd frame
+        // pacing, a resize) must not strand the lesson: spring up anyway
+        // and carry on to the swipe. The world itself never rearranges.
+        tut.bounced = true;
+        tut.stage = 'bounce'; tut.t = 0;
+        bounceUp = false;
+        squirrel.vy = -640;
       }
     } else if (tut.stage === 'bounce') {
       // let the WHOLE launch play out and freeze at the top of the arc,
@@ -1238,7 +1244,7 @@
       // apex is still low (a floor-level rescue), boing again — the swipe
       // prompt must always fire with real room to dive below.
       if (squirrel.vy > -60 || tut.t > 1.1) {
-        if (squirrel.y > H * 0.55 && tut.springs < 3) {
+        if (squirrel.y > H * 0.55 && tut.springs < 5) {
           tut.springs += 1;
           squirrel.vy = -640;
           tut.t = 0;
@@ -1267,7 +1273,6 @@
       bounceUp = false;          // the launch is cancelled — that's the lesson
       squirrel.vy = 380;
       squirrel.rot = 0.5;
-      stageTutorialDive();       // the next gate waits at the recovery point
       return;
     }
     if (tut && (tut.stage === 'glide' || tut.stage === 'bounce')) return;
@@ -1400,8 +1405,7 @@
           flap();
         } else if (tut.stage === 'tap2') {
           tut.hold = false; tut.stage = 'glide'; tut.t = 0;
-          flap();
-          stageTutorialBounce();   // from THIS flap the arc is calculable
+          flap();                  // from THIS flap the scripted arc flies itself
         } else if (tut.stage === 'yourturn') {
           tut.hold = false; tut.stage = 'gates'; tut.t = 0; tut.g0 = score;
         } else if (tut.stage === 'pal') {
@@ -1500,7 +1504,9 @@
       }
 
       if (tut) {
-        tickTutorial(dt);
+        // the tutorial clock pauses with the world during a reset freeze —
+        // otherwise the bounce/apex beats burn out while physics sleep
+        tickTutorial(shieldFreeze > 0 ? 0 : dt);
         if (tut && tut.hold) simDt = 0;   // the world waits for the pilot
       }
       if (powerLeft > 0) {
