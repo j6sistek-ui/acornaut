@@ -47,7 +47,7 @@
   // Beta uses its own save slot so testing never touches the live game's progress
   const SAVE_KEY = 'acornaut_beta';
   // Update this with every PR so a hard refresh is verifiable on the menu.
-  const BETA_BUILD = 'PR #38';
+  const BETA_BUILD = 'PR #39';
   const HELMET_IDS = ['clear','ion','solar','nebula','lunar','void','comet','cherry','royal','aurora','meteor','chrono'];
   const SUIT_IDS = ['flight','iontrim','copper','frost','voidsuit','aurorasuit','ember','stardust','robo','alien','ghost','bigbooty'];
   const TRAIL_IDS = ['sparks','ion','bubble','bloom','comet','prism','plasma','galaxy','aurora','frost','voidsmoke','supernova'];
@@ -1131,69 +1131,123 @@
   //  - anywhere else it's a DIVE tap — the downward mirror of the flap,
   //    added so floaty runs (Pocket Moon) can push down on demand.
   function startTutorial() {
-    tut = { stage: 'intro', hold: false, t: 0, g0: 0, g1: 0, nudge: 0 };
+    tut = { stage: 'intro', hold: false, t: 0, g0: 0, g1: 0, gD: 0, nudge: 0, retries: 0, springs: 0 };
     tutPending = false;
   }
   function tutSafe() { return !!tut && tut.stage !== 'free'; }
   function tutBuddy() { return !!tut && (tut.stage === 'pal' || tut.stage === 'palDemo'); }
 
-  // After the guided tap, the world is quietly rearranged so the pilot
-  // LANDS on a planet: the bounce mechanic shows itself, launches them
-  // too high for the next (deliberately low) gap — and the swipe-down
-  // prompt arrives as the solution, not a lecture.
+  // The guided opening is fully choreographed: taps are IGNORED while
+  // gliding, so from the second tap the arc is pure ballistics and the
+  // landing point is computable. These two stagers move real gates to the
+  // computed points — the bounce and the dive land where we calculated,
+  // every time, for every pilot.
+  function tutGrav() {
+    // an existing pilot may replay with a pal equipped — match live physics
+    return GRAVITY * (save.equippedPal === 'pocketmoon' ? 0.85
+                    : save.equippedPal === 'nutsack' ? 1.2 : 1);
+  }
+
+  // Called at the SECOND guided tap: predict where the fall lands ~0.9s
+  // out and park the nearest planet pair so its bottom surface sits
+  // exactly there when the squirrel arrives.
   function stageTutorialBounce() {
     const sx = W * SQUIRREL_X;
+    // predict from the CURRENT velocity, so a mid-glide re-aim (after a
+    // missed touchdown) is just as exact as the first staging
+    const tA = 0.9;                          // seconds until touchdown
+    const yPred = squirrel.y + squirrel.vy * tA + 0.5 * tutGrav() * tA * tA;
     const margin = 70;
     let target = null;
     for (const p of planets) {
-      if (p.x < sx + 80) continue;
+      if (p.x < sx + 40) continue;
       if (!target || p.x < target.x) target = p;
     }
     if (!target) return;
-    const want = Math.max(margin + target.gap / 2,
-                 Math.min(H - margin - target.gap / 2, squirrel.y - 110));
-    const dy = want - target.gapY;
-    target.gapY = want;
-    for (const b of (target.blockers || [])) b.y += dy;
-    // the gap AFTER the bounce sits low — the swipe has a job to do
+    target.x = sx + speed * tA;              // arrive right on cue
+    // bottom-planet surface (the gap's lower edge) at the fall point
+    target.gapY = Math.max(margin + target.gap / 2,
+                  Math.min(H - margin - target.gap / 2,
+                           yPred + 6 - target.gap / 2));
+    target.blockers = [];                    // nothing between pilot and lesson
+    // push the following pair out of the bounce's way — the swipe stage
+    // will place it precisely when the moment comes
     let next = null;
     for (const p of planets) {
       if (p.x <= target.x + 40) continue;
       if (!next || p.x < next.x) next = p;
     }
-    if (next) {
-      const want2 = Math.max(margin + next.gap / 2,
-                    Math.min(H - margin - next.gap / 2, squirrel.y + 70));
-      const d2 = want2 - next.gapY;
-      next.gapY = want2;
-      for (const b of (next.blockers || [])) b.y += d2;
+    if (next && next.x < target.x + 320) next.x = target.x + 320;
+  }
+
+  // Called at the swipe itself (the world is frozen under the prompt, so
+  // this is the exact apex): the dive is again pure ballistics — move the
+  // next gate to the recovery point, one leveling tap away.
+  function stageTutorialDive() {
+    const sx = W * SQUIRREL_X;
+    const tA = 0.5;                          // seconds of dive to the gate
+    const yPred = squirrel.y + 380 * tA + 0.5 * tutGrav() * tA * tA;
+    const margin = 70;
+    let target = null;
+    for (const p of planets) {
+      if (p.x < sx + 40) continue;
+      if (!target || p.x < target.x) target = p;
     }
+    if (!target) return;
+    target.x = sx + speed * tA;
+    let want = Math.max(margin + target.gap / 2,
+               Math.min(H - margin - target.gap / 2, yPred));
+    // the dive gate must sit BELOW the pilot — that's the whole lesson
+    want = Math.max(want, Math.min(H - margin - target.gap / 2,
+                                   squirrel.y + 60));
+    target.gapY = want;
+    target.blockers = [];
   }
 
   function tickTutorial(dt) {
     tut.t += dt;
     if (tut.stage === 'intro' && tut.t > 0.8) {
       tut.stage = 'tap'; tut.hold = true; tut.t = 0;
-    } else if (tut.stage === 'tapdone') {
-      if (!tut.staged && tut.t > 0.3) {
-        stageTutorialBounce();
-        tut.staged = true;
-      }
-      if (tut.t > 0.8) { tut.stage = 'bounce'; tut.t = 0; }
-    } else if (tut.stage === 'bounce') {
+    } else if (tut.stage === 'tapdone' && tut.t > 0.55) {
+      tut.stage = 'tap2'; tut.hold = true; tut.t = 0;
+    } else if (tut.stage === 'glide') {
       if (bounceUp && !tut.bounced) {
         tut.bounced = true;
-        tut.t = 0;
+        tut.stage = 'bounce'; tut.t = 0;
         // make the demo launch cinematic — a strong, readable spring
         squirrel.vy = -640;
+      } else if (tut.t > 1.6) {
+        // touchdown was due at 0.9s — it missed, so re-aim from wherever
+        // the squirrel is now. After a few tries, spring them up anyway:
+        // the swipe prompt must always arrive with the pilot up HIGH,
+        // never near the floor with the gate sitting overhead.
+        if (tut.retries < 3) {
+          tut.retries += 1;
+          stageTutorialBounce();
+          tut.t = 0.7;                       // next arrival ~0.9s out
+        } else {
+          tut.bounced = true;
+          tut.stage = 'bounce'; tut.t = 0;
+          bounceUp = false;
+          squirrel.vy = -640;
+        }
       }
+    } else if (tut.stage === 'bounce') {
       // let the WHOLE launch play out and freeze at the top of the arc,
-      // squirrel parked high above the planet it just bounced off — or
-      // after 6s if they somehow never touched it (words still teach)
-      if ((tut.bounced && (squirrel.vy > -60 || tut.t > 1.1)) ||
-          (!tut.bounced && tut.t > 6)) {
-        tut.stage = 'swipe'; tut.hold = true; tut.t = 0;
+      // squirrel parked high above the planet it just bounced off. If the
+      // apex is still low (a floor-level rescue), boing again — the swipe
+      // prompt must always fire with real room to dive below.
+      if (squirrel.vy > -60 || tut.t > 1.1) {
+        if (squirrel.y > H * 0.55 && tut.springs < 3) {
+          tut.springs += 1;
+          squirrel.vy = -640;
+          tut.t = 0;
+        } else {
+          tut.stage = 'swipe'; tut.hold = true; tut.t = 0;
+        }
       }
+    } else if (tut.stage === 'dive' && (score - tut.gD >= 1 || tut.t > 3)) {
+      tut.stage = 'yourturn'; tut.hold = true; tut.t = 0;
     } else if (tut.stage === 'gates' && score - tut.g0 >= 3) {
       tut.stage = 'pal'; tut.hold = true; tut.t = 0;
     } else if (tut.stage === 'palDemo' && score - tut.g1 >= 2) {
@@ -1209,12 +1263,14 @@
     if (mode !== 'play') return;
     // tutorial: the swipe prompt waits for exactly this gesture
     if (tut && tut.hold && tut.stage === 'swipe') {
-      tut.hold = false; tut.stage = 'gates'; tut.t = 0; tut.g0 = score;
+      tut.hold = false; tut.stage = 'dive'; tut.t = 0; tut.gD = score;
       bounceUp = false;          // the launch is cancelled — that's the lesson
       squirrel.vy = 380;
       squirrel.rot = 0.5;
+      stageTutorialDive();       // the next gate waits at the recovery point
       return;
     }
+    if (tut && (tut.stage === 'glide' || tut.stage === 'bounce')) return;
     if (!bounceUp || hitCooldown <= 0) {
       // dive tap
       squirrel.vy = 380;
@@ -1342,12 +1398,21 @@
         if (tut.stage === 'tap') {
           tut.hold = false; tut.stage = 'tapdone'; tut.t = 0;
           flap();
+        } else if (tut.stage === 'tap2') {
+          tut.hold = false; tut.stage = 'glide'; tut.t = 0;
+          flap();
+          stageTutorialBounce();   // from THIS flap the arc is calculable
+        } else if (tut.stage === 'yourturn') {
+          tut.hold = false; tut.stage = 'gates'; tut.t = 0; tut.g0 = score;
         } else if (tut.stage === 'pal') {
           tut.hold = false; tut.stage = 'palDemo'; tut.t = 0; tut.g1 = score;
         } else if (tut.stage === 'swipe') {
           tut.nudge = Math.min(3, tut.nudge + 1);   // taps don't dive
         }
         return;
+      }
+      if (tut && (tut.stage === 'glide' || tut.stage === 'bounce')) {
+        return;   // hands off — the bounce lesson flies itself
       }
       flap();
       return;
@@ -1568,9 +1633,16 @@
       }
       if (sy > H + 30) {
         if (tutSafe()) {
-          squirrel.y = H - 30;
-          squirrel.vy = -320;
-          squirrel.rot = -0.3;
+          if (tut.stage === 'dive' || tut.stage === 'gates' ||
+              tut.stage === 'palDemo') {
+            // practice time: scoop them straight back onto the flight
+            // line — no floundering along the floor
+            tutReset(sx, H + 10);
+          } else {
+            squirrel.y = H - 30;
+            squirrel.vy = -320;
+            squirrel.rot = -0.3;
+          }
         } else {
           die(); return;
         }
@@ -1589,7 +1661,7 @@
             const bx = p.x + (b.xOff || 0);
             if (circleHit(sx, sy, sr, bx, b.y, b.r * 0.92)) {
               if (tutSafe()) {
-                if (hitCooldown <= 0) bounceOff(bx, b.y);
+                if (hitCooldown <= 0 && shieldFreeze <= 0) tutReset(bx, b.y);
                 continue;
               }
               if (shieldCharges > 0) { absorbShield(bx, b.y); return; }
@@ -1890,6 +1962,34 @@
     shieldSlow = 3;
     absorbGrace = 2.2;   // freeze (0.7) + 1.5s of protected recovery
     recoveryMsg = 'SHIELD ABSORBED!';
+    spark(sx, cy, 'shield');
+  }
+
+  // Tutorial mercy: a debris hit is a free reset — the full shield
+  // theatre without spending anything. Vaporise the offenders, park the
+  // pilot back on the flight line, breathe, resume. Unlimited, but only
+  // while learning.
+  function tutReset(bx, by) {
+    const sx = W * SQUIRREL_X;
+    const cy = safeRespawnY();
+    spark(bx, by, 'shield');
+    spark(bx, by, 'poof');
+    for (const p of planets) {
+      p.blockers = (p.blockers || []).filter(b => {
+        const ax = p.x + (b.xOff || 0);
+        return Math.hypot(ax - bx, b.y - by) > 110 &&
+               Math.hypot(ax - sx, b.y - cy) > 150;
+      });
+    }
+    squirrel.y = cy;
+    squirrel.vy = 0;
+    squirrel.rot = 0;
+    hitCooldown = 0;
+    bounceUp = false;
+    shieldFreeze = 0.45;
+    shieldSlow = 2.6;
+    absorbGrace = 1.8;
+    recoveryMsg = 'PROTECTED — TRY AGAIN!';
     spark(sx, cy, 'shield');
   }
 
@@ -5065,7 +5165,7 @@
       // the swipe prompt sits lower — the pilot is parked high after the
       // bounce, and the prompt shouldn't cover them
       const cy = tut.stage === 'swipe' ? H * 0.55 : H * 0.4;
-      if (tut.stage === 'tap') {
+      if (tut.stage === 'tap' || tut.stage === 'tap2') {
         // tap ripple glyph
         for (let i = 0; i < 2; i++) {
           const k = ((t * 0.9 + i * 0.5) % 1);
@@ -5093,10 +5193,11 @@
         ctx.fill();
         ctx.fillStyle = '#fff';
         ctx.font = 'bold 28px system-ui';
-        ctx.fillText('TAP', W / 2, cy + 4);
+        ctx.fillText(tut.stage === 'tap2' ? 'TAP AGAIN' : 'TAP', W / 2, cy + 4);
         ctx.fillStyle = 'rgba(255,255,255,0.75)';
         ctx.font = '600 15px system-ui';
-        ctx.fillText('anywhere — a boost upward', W / 2, cy + 30);
+        ctx.fillText(tut.stage === 'tap2' ? 'one more boost — then just watch'
+                                          : 'anywhere — a boost upward', W / 2, cy + 30);
         ctx.globalAlpha = 0.7 + 0.3 * Math.sin(t * 4);
         ctx.fillStyle = '#6ef0ff';
         ctx.font = '600 13px system-ui';
@@ -5139,6 +5240,19 @@
         ctx.font = '600 13px system-ui';
         ctx.fillText(tut.nudge > 0 ? 'drag downward — not a tap!' : 'try it now', W / 2, cy + 62);
         ctx.globalAlpha = 1;
+      } else if (tut.stage === 'yourturn') {
+        ctx.fillStyle = '#5dff9e';
+        ctx.font = 'bold 26px system-ui';
+        ctx.fillText('YOUR TURN!', W / 2, cy + 4);
+        ctx.fillStyle = 'rgba(255,255,255,0.8)';
+        ctx.font = '600 15px system-ui';
+        ctx.fillText('fly the gaps · grab the acorns', W / 2, cy + 30);
+        ctx.fillText("hit debris? you're protected while learning", W / 2, cy + 52);
+        ctx.globalAlpha = 0.7 + 0.3 * Math.sin(t * 4);
+        ctx.fillStyle = '#5dff9e';
+        ctx.font = '600 13px system-ui';
+        ctx.fillText('tap to begin', W / 2, cy + 86);
+        ctx.globalAlpha = 1;
       } else if (tut.stage === 'pal') {
         drawPal('buddy', W / 2, cy - 70 + Math.sin(t * 2.4) * 4, 2.6, t);
         ctx.fillStyle = '#ffd080';
@@ -5147,12 +5261,11 @@
         ctx.fillStyle = 'rgba(255,255,255,0.8)';
         ctx.font = '600 14px system-ui';
         ctx.fillText('The Acorn Buddy reels in nearby acorns.', W / 2, cy + 28);
-        ctx.fillText('Companions live in the hangar — each one', W / 2, cy + 48);
-        ctx.fillText('changes your run. Watch this one work.', W / 2, cy + 66);
+        ctx.fillText('Find more companions in the hangar.', W / 2, cy + 48);
         ctx.globalAlpha = 0.7 + 0.3 * Math.sin(t * 4);
         ctx.fillStyle = '#6ef0ff';
         ctx.font = '600 13px system-ui';
-        ctx.fillText('tap to continue', W / 2, cy + 98);
+        ctx.fillText('tap to continue', W / 2, cy + 80);
         ctx.globalAlpha = 1;
       }
       ctx.textAlign = 'left';
@@ -5160,11 +5273,18 @@
     }
     // flying banners
     ctx.textAlign = 'center';
-    if (tut.stage === 'bounce') {
+    if (tut.stage === 'glide' || tut.stage === 'bounce') {
       ctx.fillStyle = '#ffb84d';
       ctx.font = 'bold 14px system-ui';
-      ctx.fillText(tut.bounced ? 'BOING! PLANETS BOUNCE YOU'
-                               : 'PLANET AHEAD — LAND ON IT', W / 2, 112);
+      ctx.fillText(tut.stage === 'bounce' ? 'BOING! PLANETS BOUNCE YOU'
+                                          : 'PLANET AHEAD — LAND ON IT', W / 2, 112);
+    } else if (tut.stage === 'dive') {
+      ctx.fillStyle = '#ffb84d';
+      ctx.font = 'bold 14px system-ui';
+      ctx.fillText('MAKE THE GAP', W / 2, 112);
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.font = '600 12px system-ui';
+      ctx.fillText('a tap levels you off', W / 2, 130);
     } else if (tut.stage === 'gates') {
       ctx.fillStyle = '#6ef0ff';
       ctx.font = 'bold 14px system-ui';
@@ -5805,25 +5925,23 @@
     };
 
     item(() => drawAcorn(52, y + 6, false), 'ACORN',
-         'The currency. Spend it in the hangar on', 'helmets, suits, trails and companions.');
+         'Currency — spend it in the hangar.');
     item(() => drawAcorn(52, y + 6, true), 'SLOW ACORN',
-         'Slows everything down for 6 seconds.');
+         'Slows everything for 6 seconds.');
     item(() => drawAcorn(52, y + 6, 'shield'), 'SHIELD ACORN',
-         'Absorbs one debris hit, then gives you a', 'moment to recover. Rare — grab it.');
+         'Absorbs one debris hit. Rare — grab it.');
     item(() => drawAcorn(52, y + 6, 'blackhole'), 'BLACK HOLE',
-         'Warps space for 15 seconds: reversed or', 'tilted flight. Survive it for the glory.');
+         'Warps flight for 15s — reversed or tilted.');
     item(() => drawAcorn(52, y + 6, 'wormhole'), 'WORMHOLE',
-         'Lost in Space only: mirrors your heading', 'until the next one flips it back.');
+         'Lost in Space: mirrors your heading.');
 
     ctx.textAlign = 'center';
     ctx.fillStyle = 'rgba(255,255,255,0.4)';
     ctx.font = '600 11.5px system-ui';
-    ctx.fillText('DEEP SPACE: space itself shifts every 10s.', W / 2, y + 14);
-    ctx.fillText('LOST IN SPACE: drifting speed, a tilt that', W / 2, y + 30);
-    ctx.fillText('never rests, wormholes that mirror it all.', W / 2, y + 46);
+    ctx.fillText('DEEP SPACE: space shifts every 10s.', W / 2, y + 14);
+    ctx.fillText('LOST IN SPACE: drift, tilt, wormholes.', W / 2, y + 30);
     ctx.fillStyle = '#ffd080';
-    ctx.fillText('BRING A PAL: every companion adds its own', W / 2, y + 66);
-    ctx.fillText('fun modifier — browse them in the hangar.', W / 2, y + 82);
+    ctx.fillText('BRING A PAL: each adds a fun modifier.', W / 2, y + 50);
 
     // replay the first-flight tutorial any time
     const rb = helpReplayBtn();
