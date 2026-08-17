@@ -310,6 +310,9 @@
   // screen bottom bounce instead of kill.
   let tut = null;            // active tutorial state
   let tutPending = false;    // help-screen replay request
+  // every tutorial prompt ignores input for a short reading window —
+  // pilots arrive mid-tap-rhythm and would blow straight through it
+  const TUT_ARM = 2;
   let flightDrag = null;     // pointer drag state on the flight log
   let shopTab = 'helmets'; // helmets | suits | mods | trails | pals
 
@@ -872,6 +875,33 @@
     lastSpawnX = x;
   }
 
+  // Shared by taps and the keyboard: the tutorial's prompts intercept
+  // input first, and every prompt stays deaf until its reading window
+  // has passed.
+  function playTap() {
+    if (tut && tut.hold) {
+      if (tut.t < TUT_ARM) return;   // still reading — not armed yet
+      if (tut.stage === 'tap') {
+        tut.hold = false; tut.stage = 'tapdone'; tut.t = 0;
+        flap();
+      } else if (tut.stage === 'tap2') {
+        tut.hold = false; tut.stage = 'glide'; tut.t = 0;
+        flap();                  // from THIS flap the scripted arc flies itself
+      } else if (tut.stage === 'yourturn') {
+        tut.hold = false; tut.stage = 'gates'; tut.t = 0; tut.g0 = score;
+      } else if (tut.stage === 'pal') {
+        tut.hold = false; tut.stage = 'palDemo'; tut.t = 0; tut.g1 = score;
+      } else if (tut.stage === 'swipe') {
+        tut.nudge = Math.min(3, tut.nudge + 1);   // taps don't dive
+      }
+      return;
+    }
+    if (tut && (tut.stage === 'glide' || tut.stage === 'bounce')) {
+      return;   // hands off — the bounce lesson flies itself
+    }
+    flap();
+  }
+
   function flap() {
     if (mode === 'ready') {
       mode = 'play';
@@ -1269,6 +1299,7 @@
     if (mode !== 'play') return;
     // tutorial: the swipe prompt waits for exactly this gesture
     if (tut && tut.hold && tut.stage === 'swipe') {
+      if (tut.t < TUT_ARM) return;   // still reading — not armed yet
       tut.hold = false; tut.stage = 'dive'; tut.t = 0; tut.gD = score;
       bounceUp = false;          // the launch is cancelled — that's the lesson
       squirrel.vy = 380;
@@ -1399,26 +1430,7 @@
       return;
     }
     if (mode === 'ready' || mode === 'play') {
-      if (tut && tut.hold) {
-        if (tut.stage === 'tap') {
-          tut.hold = false; tut.stage = 'tapdone'; tut.t = 0;
-          flap();
-        } else if (tut.stage === 'tap2') {
-          tut.hold = false; tut.stage = 'glide'; tut.t = 0;
-          flap();                  // from THIS flap the scripted arc flies itself
-        } else if (tut.stage === 'yourturn') {
-          tut.hold = false; tut.stage = 'gates'; tut.t = 0; tut.g0 = score;
-        } else if (tut.stage === 'pal') {
-          tut.hold = false; tut.stage = 'palDemo'; tut.t = 0; tut.g1 = score;
-        } else if (tut.stage === 'swipe') {
-          tut.nudge = Math.min(3, tut.nudge + 1);   // taps don't dive
-        }
-        return;
-      }
-      if (tut && (tut.stage === 'glide' || tut.stage === 'bounce')) {
-        return;   // hands off — the bounce lesson flies itself
-      }
-      flap();
+      playTap();
       return;
     }
     if (mode === 'dead') {
@@ -1455,7 +1467,7 @@
         resetRun(); mode = 'ready';
         if (!save.tutorialDone || tutPending) startTutorial();
       }
-      else if (mode === 'ready' || mode === 'play') flap();
+      else if (mode === 'ready' || mode === 'play') playTap();
       else if (mode === 'dead' && deadTimer > 0.6) bankRun();
     }
   });
@@ -5164,6 +5176,9 @@
   // companion reveal, light banners while flying between them.
   function drawTutorial() {
     const t = performance.now() / 1000;
+    // the action cue fades in as the reading window ends
+    const armA = tut.hold
+      ? Math.max(0, Math.min(1, (tut.t - TUT_ARM) / 0.3)) : 1;
     if (tut.hold) {
       ctx.fillStyle = 'rgba(5,8,16,0.6)';
       ctx.fillRect(0, 0, W, H);
@@ -5204,7 +5219,7 @@
         ctx.font = '600 15px system-ui';
         ctx.fillText(tut.stage === 'tap2' ? 'one more boost — then just watch'
                                           : 'anywhere — a boost upward', W / 2, cy + 30);
-        ctx.globalAlpha = 0.7 + 0.3 * Math.sin(t * 4);
+        ctx.globalAlpha = armA * (0.7 + 0.3 * Math.sin(t * 4));
         ctx.fillStyle = '#6ef0ff';
         ctx.font = '600 13px system-ui';
         ctx.fillText('try it now', W / 2, cy + 62);
@@ -5241,7 +5256,7 @@
         ctx.fillStyle = 'rgba(255,255,255,0.75)';
         ctx.font = '600 15px system-ui';
         ctx.fillText('dive back down and make the gap', W / 2, cy + 30);
-        ctx.globalAlpha = 0.7 + 0.3 * Math.sin(t * 4);
+        ctx.globalAlpha = armA * (0.7 + 0.3 * Math.sin(t * 4));
         ctx.fillStyle = '#ffb84d';
         ctx.font = '600 13px system-ui';
         ctx.fillText(tut.nudge > 0 ? 'drag downward — not a tap!' : 'try it now', W / 2, cy + 62);
@@ -5254,7 +5269,7 @@
         ctx.font = '600 15px system-ui';
         ctx.fillText('fly the gaps · grab the acorns', W / 2, cy + 30);
         ctx.fillText("hit debris? you're protected while learning", W / 2, cy + 52);
-        ctx.globalAlpha = 0.7 + 0.3 * Math.sin(t * 4);
+        ctx.globalAlpha = armA * (0.7 + 0.3 * Math.sin(t * 4));
         ctx.fillStyle = '#5dff9e';
         ctx.font = '600 13px system-ui';
         ctx.fillText('tap to begin', W / 2, cy + 86);
@@ -5268,7 +5283,7 @@
         ctx.font = '600 14px system-ui';
         ctx.fillText('The Acorn Buddy reels in nearby acorns.', W / 2, cy + 28);
         ctx.fillText('Find more companions in the hangar.', W / 2, cy + 48);
-        ctx.globalAlpha = 0.7 + 0.3 * Math.sin(t * 4);
+        ctx.globalAlpha = armA * (0.7 + 0.3 * Math.sin(t * 4));
         ctx.fillStyle = '#6ef0ff';
         ctx.font = '600 13px system-ui';
         ctx.fillText('tap to continue', W / 2, cy + 80);
