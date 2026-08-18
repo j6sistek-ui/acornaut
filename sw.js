@@ -1,6 +1,6 @@
 // Cache version — MUST change on every release or installed apps keep
 // serving the old files. Decoupled from the game version string.
-const CACHE = 'acornaut-v1.2.0-icons2';
+const CACHE = 'acornaut-v1.2.1';
 const ASSETS = [
   './',
   './index.html',
@@ -28,8 +28,27 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
+  const path = new URL(req.url).pathname;
   // Never intercept the beta test build — it must always come from the network
-  if (new URL(req.url).pathname.includes('/beta/')) return;
+  if (path.includes('/beta/')) return;
+  // Pages and the manifest come from the NETWORK first: an installed app
+  // must pick up a new release on its next launch, not whenever the old
+  // worker happens to cycle. The cache is the offline fallback only,
+  // refreshed on every successful fetch.
+  if (req.mode === 'navigate' || path.endsWith('.webmanifest')) {
+    event.respondWith(
+      fetch(req).then((res) => {
+        if (res.ok) {
+          const copy = res.clone();
+          caches.open(CACHE).then((cache) => cache.put(req, copy));
+        }
+        return res;
+      }).catch(() =>
+        caches.match(req).then((cached) => cached || caches.match('./index.html'))
+      )
+    );
+    return;
+  }
   event.respondWith(
     caches.match(req).then((cached) => {
       if (cached) return cached;
