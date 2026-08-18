@@ -889,6 +889,9 @@
         flap();                  // from THIS flap the scripted arc flies itself
       } else if (tut.stage === 'yourturn') {
         tut.hold = false; tut.stage = 'gates'; tut.t = 0; tut.g0 = score;
+        // the controls are learned — persist NOW, so quitting mid-tutorial
+        // never re-runs the whole thing on the next launch
+        if (!save.tutorialDone) { save.tutorialDone = true; writeSave(save); }
       } else if (tut.stage === 'pal') {
         tut.hold = false; tut.stage = 'palDemo'; tut.t = 0; tut.g1 = score;
       } else if (tut.stage === 'swipe') {
