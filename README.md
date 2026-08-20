@@ -29,4 +29,4 @@ BETA TESTER: https://j6sistek-ui.github.io/acornaut/beta/
 
 ## License
 
-[CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) — free to share and adapt **with credit**, **non-commercial** only. See [LICENSE](LICENSE).
+Proprietary — **all rights reserved**. The code, art, characters and name are not licensed for reuse or redistribution. See [LICENSE](LICENSE).

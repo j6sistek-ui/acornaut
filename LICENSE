@@ -1,39 +1,32 @@
-Creative Commons Attribution-NonCommercial 4.0 International
+Acornaut — Proprietary License
 
-Acornaut
-Copyright (c) 2026 James Sistek (j6sistek-ui)
+Copyright (c) 2026 James Sistek (j6sistek-ui). All rights reserved.
 
-This work is licensed under the Creative Commons Attribution-NonCommercial
-4.0 International License.
+This repository and everything in it — the source code, artwork,
+characters, names, music and sound, level and game design, and every
+other asset — is the proprietary work of the copyright holder.
 
-You are free to:
-  - Share — copy and redistribute the material in any medium or format
-  - Adapt — remix, transform, and build upon the material
+No license is granted. This repository is published for reference and
+for collaboration on the Acornaut project itself; its visibility is not
+an offer to license. Except for the limited rights that cannot be
+reserved (such as viewing the repository where GitHub's Terms of
+Service require it, and playing the game at its official pages), you
+may not copy, modify, distribute, sublicense, sell, or create
+derivative works from any part of this repository, in any medium, for
+any purpose, without prior written permission from the copyright
+holder.
 
-Under the following terms:
-  - Attribution — You must give appropriate credit, provide a link to the
-    license, and indicate if changes were made. You may do so in any
-    reasonable manner, but not in any way that suggests the licensor
-    endorses you or your use.
-  - NonCommercial — You may not use the material for commercial purposes.
-  - No additional restrictions — You may not apply legal terms or
-    technological measures that legally restrict others from doing
-    anything the license permits.
+The Acornaut name, its logo, characters, and artwork may not be used to
+promote or brand any other product or service.
 
-Notices:
-  You do not have to comply with the license for elements of the material
-  in the public domain or where your use is permitted by an applicable
-  exception or limitation.
+THE SOFTWARE AND ASSETS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
+KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR
+ANY CLAIM, DAMAGES OR OTHER LIABILITY ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR ASSETS OR THEIR USE.
 
-  No warranties are given. The license may not give you all of the
-  permissions necessary for your intended use. For example, other rights
-  such as publicity, privacy, or moral rights may limit how you use the
-  material.
+For licensing inquiries, contact the copyright holder via GitHub:
+https://github.com/j6sistek-ui
 
-Full legal code:
-https://creativecommons.org/licenses/by-nc/4.0/legalcode
-
-Human-readable summary:
-https://creativecommons.org/licenses/by-nc/4.0/
-
-SPDX-License-Identifier: CC-BY-NC-4.0
+SPDX-License-Identifier: LicenseRef-Acornaut-Proprietary
