@@ -1,8 +1,8 @@
 {
   "name": "Acornaut",
   "short_name": "Acornaut",
-  "description": "Soar the cosmos, gather the acorns — a space squirrel adventure.",
-  "start_url": "./",
+  "description": "Soar the cosmos, gather the acorns - a space squirrel adventure.",
+  "start_url": "./arcade/",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
