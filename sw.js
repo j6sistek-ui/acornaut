@@ -1,10 +1,13 @@
-// Cache version — MUST change on every release or installed apps keep
-// serving the old files. Decoupled from the game version string.
+// Cache version. STAMPED BY build.py from a hash of everything it emits —
+// this file is a template; the version below is substituted at build time.
 //
-// v2 moved the arcade build to /arcade/ and gave the site root to the
-// landing page. Bumping the name is what flushes every v1 cache, which
-// still holds the arcade build under the root URLs.
-const CACHE = 'acornaut-v2.0.0';
+// It has to change on every release or installed apps keep serving the old
+// files: assets below are answered cache-first and never revalidated inside a
+// cache generation, so a changed asset under an unchanged cache name is
+// invisible forever. Deriving it from content means identical output keeps the
+// same name (no needless churn) and any change flushes the old generation in
+// the activate handler below.
+const CACHE = 'acornaut-db932e4a0db4';
 
 // The installed app opens the ARCADE, so that is the shell worth precaching.
 // The landing page is a page you visit, not an app you launch: it is left to
