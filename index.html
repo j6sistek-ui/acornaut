@@ -318,6 +318,13 @@ h1 em{font-style:normal; color:var(--violet-lite)}
 .sw img{width:100%; height:100%; object-fit:contain}
 .sw:hover{transform:translateY(-3px)}
 .sw[aria-pressed="true"]{border-color:var(--accent); background:radial-gradient(circle at 50% 30%,color-mix(in srgb,var(--accent) 22%,transparent),rgba(8,6,18,.9))}
+.sw.upcoming{border-style:dashed; border-color:color-mix(in srgb,var(--violet) 55%,var(--line-soft))}
+.sw-tag{position:absolute; left:6px; right:6px; bottom:5px; text-align:center;
+  font-family:Figtree,sans-serif; font-style:normal; font-weight:800; font-size:.58rem;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--violet-lite);
+  background:rgba(8,6,18,.82); border:1px solid color-mix(in srgb,var(--violet) 45%,transparent);
+  border-radius:999px; padding:2px 0; pointer-events:none}
+.sw.upcoming img{opacity:.92}
 @media (prefers-reduced-motion:reduce){
   .rail{-webkit-mask-image:none; mask-image:none; overflow-x:auto; flex-wrap:wrap}
   .rail-in{flex-wrap:wrap; animation:none}
@@ -397,12 +404,11 @@ footer{background:var(--void); border-top:1px solid var(--line-soft);
     <div class="hero-copy">
       <p class="eyebrow">Free in your browser <s></s> No install <s></s> No account</p>
       <h1>One tap.<br>Thirty suits.<br><em>A hundred missions.</em></h1>
-      <p class="lede hero-sub">You&rsquo;re a squirrel in a spacesuit, threading the gaps between hand-painted planets. Tap and he rises. Stop and gravity takes him back. That is the entire control scheme.</p>
+      <p class="lede hero-sub">You&rsquo;re a squirrel in a spacesuit, threading the gaps between hand-painted planets. Tap and he rises. Stop and gravity takes him back.</p>
       <div class="hero-cta">
         <a class="btn" href="https://acornaut.app" target="_blank" rel="noopener">Play Acornaut</a>
-        <a class="arrow" href="#s-rule">Try the controls here <span>&#8594;</span></a>
+        <a class="arrow" href="#s-rule">Try it here <span>&#8594;</span></a>
       </div>
-      <p class="note hero-micro">Runs in any phone browser. Add it to your home screen and it opens like any other game on the phone.</p>
     </div>
     <figure class="shot hero-film">
       <div class="phone"><video width="400" height="712" data-src="hero.mp4" poster="assets/hero-poster.jpg" muted loop playsinline preload="none" aria-label="Acornaut title film"></video></div>
@@ -424,9 +430,9 @@ footer{background:var(--void); border-top:1px solid var(--line-soft);
 <section class="toy-band" id="s-rule" data-node>
   <div class="wrap">
     <div class="hd rise">
-      <p class="kicker">The whole control scheme</p>
-      <h2>Tap. That is the entire input.</h2>
-      <p class="lede">No buttons to learn and no tutorial to sit through. Planets don&rsquo;t kill you &mdash; you bounce off them, and the run keeps count. Only the floor is fatal. Thirty suits, a hundred missions and six rule-sets all hang off that one motion, and the strip below runs the game&rsquo;s own gravity, its own bounce, and Eclipse&rsquo;s own flight frames.</p>
+      <p class="kicker">Try it here</p>
+      <h2>Same gravity. Same bounce.</h2>
+      <p class="lede">Planets don&rsquo;t kill you &mdash; you bounce off them, and the run keeps count. Only the floor is fatal.</p>
     </div>
 
     <div class="toy rise" id="toy" role="button" tabindex="0" aria-label="Playable demo: tap or press space to flap">
@@ -445,8 +451,7 @@ footer{background:var(--void); border-top:1px solid var(--line-soft);
     </div>
 
     <div class="toy-foot">
-      <p class="reveal" id="craft">Sixteen painted attitudes &mdash; eight climbing, eight diving. The pose is the pitch, not a tilted sprite.</p>
-      <p class="tiny">Same gravity, same flap, same bounce, same frames &mdash; but this one is only a toy.</p>
+      <p class="tiny">This one is only a toy. The real game is at acornaut.app.</p>
     </div>
   </div>
 </section>
@@ -456,8 +461,8 @@ footer{background:var(--void); border-top:1px solid var(--line-soft);
   <div class="wrap">
     <div class="hd rise">
       <p class="kicker">Free Flight</p>
-      <h2>Six ways to fly. The same one control.</h2>
-      <p class="lede">Three of them are below, running. No trailer cuts and no mock-ups &mdash; these are captures of the game being played, at the speed it is played.</p>
+      <h2>Six ways to fly.</h2>
+      <p class="lede">Three of them are below, running.</p>
     </div>
 
     <div class="reel">
@@ -471,16 +476,15 @@ footer{background:var(--void); border-top:1px solid var(--line-soft);
       </figure>
       <figure class="clip rise">
         <div class="phone"><video width="400" height="868" data-src="mode-race.mp4" poster="assets/poster-race.jpg" muted loop playsinline preload="none" aria-label="Hyper Run gameplay"></video></div>
-        <figcaption><b>Hyper Run</b><span>A different machine entirely: hold to thrust, thread the rings, beat the clock. <i>Earned at level 33.</i></span></figcaption>
+        <figcaption><b>Hyper Run</b><span>Thread the rings. Beat the clock. Clear the debris field after level 33 to earn it.</span></figcaption>
       </figure>
     </div>
 
     <div class="modes-grid">
       <div class="mlist">
-        <p class="kicker" style="margin-bottom:4px">And three more</p>
-        <div class="mode rise hole" style="--accent:#b45cff"><span class="dot"></span><div><h3>Deep Space</h3><p>Endless back-to-back black holes. No gates, no scenery, just the next mouth.</p></div></div>
+        <div class="mode rise" style="--accent:#a276ff"><span class="dot"></span><div><h3>The Spill</h3><p>Waves of rock and scrap keep coming. Survive them, mine the ore, buy the next upgrade.</p></div></div>
+        <div class="mode rise hole locked" style="--accent:#b45cff"><span class="dot"></span><div><h3>Deep Space</h3><p>Endless back-to-back black holes. No gates, no scenery, just the next mouth.</p></div><span class="tag">&#9733; 12 to unlock</span></div>
         <div class="mode rise locked" style="--accent:#8fb8ff"><span class="dot"></span><div><h3>Lost in Space</h3><p>Space is in control here &mdash; the world tilts and mirrors while you fly.</p></div><span class="tag">&#9733; 45 to unlock</span></div>
-        <div class="mode rise" style="--accent:#4fe8dd"><span class="dot"></span><div><h3>Wormhole Run</h3><p>Hold to thrust down the corridor. One finger, no gaps, no mercy.</p></div></div>
       </div>
       <figure class="shot rise" style="margin:0">
         <div class="phone"><img src="assets/mk-modes.jpg" alt="The Acornaut mode picker, showing six flight modes with personal bests" loading="lazy"></div>
@@ -505,8 +509,7 @@ footer{background:var(--void); border-top:1px solid var(--line-soft);
       <div class="rise">
         <p class="kicker">The Star Chart</p>
         <h2>A hundred missions on one climbing road.</h2>
-        <p class="lede" style="margin-top:20px">Numbered 1 to 100, three stars each. The rewards hang on a rail beside the road, so before you go for a star you already know exactly what it buys. Nothing on this chart sits behind a question mark.</p>
-        <p class="goldline"><span class="num">100 missions</span> <s>&middot;</s> <span class="num">300 stars</span></p>
+        <p class="lede" style="margin-top:20px">Numbered 1 to 100, three stars each. The rewards hang on a rail beside the road, so before you go for a star you already know exactly what it buys.</p>
       </div>
     </div>
   </div>
@@ -518,7 +521,7 @@ footer{background:var(--void); border-top:1px solid var(--line-soft);
     <div class="hd rise">
       <p class="kicker">The Fitting Room</p>
       <h2>Thirty suits. Not one of them is a recolour.</h2>
-      <p class="lede">Every suit is its own painting, with a helmet built to match, a trail that burns in its own colour, and pals that fly alongside you. In the game you build the look in a lit display case and the squirrel wears your picks live while you decide. Pick one below &mdash; the case is the same one.</p>
+      <p class="lede">Twenty ship in the live game today; the ones marked <b>Soon</b> are upcoming on the beta shelf. Pick one below &mdash; helmet, trail, and pal are built to match.</p>
     </div>
 
     <div class="case-grid">
@@ -543,7 +546,7 @@ footer{background:var(--void); border-top:1px solid var(--line-soft);
     <div class="wall rise">
       <div class="rail" id="railA"><div class="rail-in" id="railAin"></div></div>
       <div class="rail rev" id="railB"><div class="rail-in" id="railBin"></div></div>
-      <p class="tiny" style="margin-top:16px;text-align:center">30 suits &middot; 31 helmets &middot; 18 trails &middot; 15 pals &mdash; every one of them painted, not tinted.</p>
+      <p class="tiny" style="margin-top:16px;text-align:center">30 on the wall &middot; 20 live &middot; 10 upcoming</p>
     </div>
   </div>
 </section>
@@ -565,10 +568,6 @@ footer{background:var(--void); border-top:1px solid var(--line-soft);
         <p>No. No sign-in, no email, no download. Your progress lives in the browser you play it in.</p>
       </div>
       <div>
-        <h3>Is it a real app?</h3>
-        <p>It runs in the browser today, and it installs to a phone home screen if you want it there. There is no App Store listing yet &mdash; an iOS release is where this is heading.</p>
-      </div>
-      <div>
         <h3>Who made it?</h3>
         <p>One person. Every suit, planet and animation frame in it was painted for this game and nothing else.</p>
       </div>
@@ -583,7 +582,7 @@ footer{background:var(--void); border-top:1px solid var(--line-soft);
     <p class="kicker" style="justify-content:center">One more thing</p>
     <h2>You have now read more about this game than it takes to play it.</h2>
     <a class="btn" href="https://acornaut.app" target="_blank" rel="noopener" style="margin-top:14px">Play Acornaut</a>
-    <p class="note" style="text-align:center">Free. No account. Add it to your home screen and it runs like an app from there.</p>
+    <p class="note" style="text-align:center">Free. No account.</p>
   </div>
 </section>
 
@@ -608,7 +607,7 @@ footer{background:var(--void); border-top:1px solid var(--line-soft);
 
 <div class="dock" id="dock"><a class="btn" href="https://acornaut.app" target="_blank" rel="noopener">&#9654;&nbsp; Play free &mdash; no account</a></div>
 
-<script>window.__SUITS__=[{"id": "flight", "name": "Flight", "glow": "#c9b6ff", "src": "assets/s-flight.webp"}, {"id": "iontrim", "name": "Ion", "glow": "#4ad8ff", "src": "assets/s-iontrim.webp"}, {"id": "copper", "name": "Copper", "glow": "#ff8a2a", "src": "assets/s-copper.webp"}, {"id": "frost", "name": "Frost", "glow": "#9fe4ff", "src": "assets/s-frost.webp"}, {"id": "voidsuit", "name": "Void", "glow": "#b45cff", "src": "assets/s-voidsuit.webp"}, {"id": "aurorasuit", "name": "Aurora", "glow": "#5dffd0", "src": "assets/s-aurorasuit.webp"}, {"id": "ember", "name": "Ember", "glow": "#ff5a1e", "src": "assets/s-ember.webp"}, {"id": "stardust", "name": "Stardust", "glow": "#8fb8ff", "src": "assets/s-stardust.webp"}, {"id": "robo", "name": "Robo", "glow": "#35e0ff", "src": "assets/s-robo.webp"}, {"id": "alien", "name": "Alien", "glow": "#7dff4d", "src": "assets/s-alien.webp"}, {"id": "ghost", "name": "Ghost", "glow": "#9fd8ff", "src": "assets/s-ghost.webp"}, {"id": "bigbooty", "name": "Big Booty", "glow": "#ffb84d", "src": "assets/s-bigbooty.webp"}, {"id": "catsuit", "name": "Cat", "glow": "#c9b6ff", "src": "assets/s-catsuit.webp"}, {"id": "gemmie", "name": "Gemmie", "glow": "#ffb8f0", "src": "assets/s-gemmie.webp"}, {"id": "sammie", "name": "Sammie", "glow": "#c9b6ff", "src": "assets/s-sammie.webp"}, {"id": "seraph", "name": "Seraph", "glow": "#ffe9a8", "src": "assets/s-seraph.webp"}, {"id": "leviathan", "name": "Leviathan", "glow": "#4fe8dd", "src": "assets/s-leviathan.webp"}, {"id": "verdant", "name": "Verdant", "glow": "#38ff9a", "src": "assets/s-verdant.webp"}, {"id": "cryostar", "name": "Cryostar", "glow": "#54d8ff", "src": "assets/s-cryostar.webp"}, {"id": "eclipse", "name": "Eclipse", "glow": "#b552ff", "src": "assets/s-eclipse.webp"}, {"id": "volt", "name": "Volt", "glow": "#54ff2e", "src": "assets/s-volt.webp"}, {"id": "cinderforge", "name": "Cinderforge", "glow": "#ff3b22", "src": "assets/s-cinderforge.webp"}, {"id": "groveguard", "name": "Groveguard", "glow": "#65dca1", "src": "assets/s-groveguard.webp"}, {"id": "cosmic", "name": "Cosmic", "glow": "#d687ff", "src": "assets/s-cosmic.webp"}, {"id": "sunforged", "name": "Sunforged", "glow": "#ffad2b", "src": "assets/s-sunforged.webp"}, {"id": "abyssal", "name": "Abyssal", "glow": "#39dcff", "src": "assets/s-abyssal.webp"}, {"id": "amethyst", "name": "Amethyst", "glow": "#c86dff", "src": "assets/s-amethyst.webp"}, {"id": "ivoryguard", "name": "Ivoryguard", "glow": "#fff0b8", "src": "assets/s-ivoryguard.webp"}, {"id": "reactor", "name": "Reactor", "glow": "#65ff32", "src": "assets/s-reactor.webp"}, {"id": "cyber", "name": "Cyber", "glow": "#7030df", "src": "assets/s-cyber.webp"}];window.__ASC__=["assets/asc-1.webp", "assets/asc-2.webp", "assets/asc-3.webp", "assets/asc-4.webp", "assets/asc-5.webp", "assets/asc-6.webp", "assets/asc-7.webp", "assets/asc-8.webp"];window.__DESC__=["assets/desc-1.webp", "assets/desc-2.webp", "assets/desc-3.webp", "assets/desc-4.webp", "assets/desc-5.webp", "assets/desc-6.webp", "assets/desc-7.webp", "assets/desc-8.webp"];window.__PLANETS__=["assets/p-3.webp", "assets/p-7.webp", "assets/p-12.webp", "assets/p-18.webp", "assets/p-24.webp", "assets/p-29.webp"];window.__CLIPS__={"hero.mp4": "clips/hero.mp4", "worlds.mp4": "clips/worlds.mp4", "mode-fly.mp4": "clips/mode-fly.mp4", "mode-arcade.mp4": "clips/mode-arcade.mp4", "mode-race.mp4": "clips/mode-race.mp4", "squad.mp4": "clips/squad.mp4"};</script>
+<script>window.__SUITS__=[{"id": "flight", "name": "Flight", "glow": "#c9b6ff", "beta": false, "src": "assets/s-flight.webp"}, {"id": "iontrim", "name": "Ion", "glow": "#4ad8ff", "beta": false, "src": "assets/s-iontrim.webp"}, {"id": "copper", "name": "Copper", "glow": "#ff8a2a", "beta": false, "src": "assets/s-copper.webp"}, {"id": "frost", "name": "Frost", "glow": "#9fe4ff", "beta": false, "src": "assets/s-frost.webp"}, {"id": "voidsuit", "name": "Void", "glow": "#b45cff", "beta": false, "src": "assets/s-voidsuit.webp"}, {"id": "aurorasuit", "name": "Aurora", "glow": "#5dffd0", "beta": true, "src": "assets/s-aurorasuit.webp"}, {"id": "ember", "name": "Ember", "glow": "#ff5a1e", "beta": false, "src": "assets/s-ember.webp"}, {"id": "stardust", "name": "Stardust", "glow": "#8fb8ff", "beta": true, "src": "assets/s-stardust.webp"}, {"id": "robo", "name": "Robo", "glow": "#35e0ff", "beta": false, "src": "assets/s-robo.webp"}, {"id": "alien", "name": "Alien", "glow": "#7dff4d", "beta": false, "src": "assets/s-alien.webp"}, {"id": "ghost", "name": "Ghost", "glow": "#9fd8ff", "beta": false, "src": "assets/s-ghost.webp"}, {"id": "bigbooty", "name": "Big Booty", "glow": "#ffb84d", "beta": false, "src": "assets/s-bigbooty.webp"}, {"id": "catsuit", "name": "Cat", "glow": "#c9b6ff", "beta": false, "src": "assets/s-catsuit.webp"}, {"id": "gemmie", "name": "Gemmie", "glow": "#ffb8f0", "beta": false, "src": "assets/s-gemmie.webp"}, {"id": "sammie", "name": "Sammie", "glow": "#c9b6ff", "beta": false, "src": "assets/s-sammie.webp"}, {"id": "seraph", "name": "Seraph", "glow": "#ffe9a8", "beta": false, "src": "assets/s-seraph.webp"}, {"id": "leviathan", "name": "Leviathan", "glow": "#4fe8dd", "beta": false, "src": "assets/s-leviathan.webp"}, {"id": "verdant", "name": "Verdant", "glow": "#38ff9a", "beta": false, "src": "assets/s-verdant.webp"}, {"id": "cryostar", "name": "Cryostar", "glow": "#54d8ff", "beta": false, "src": "assets/s-cryostar.webp"}, {"id": "eclipse", "name": "Eclipse", "glow": "#b552ff", "beta": false, "src": "assets/s-eclipse.webp"}, {"id": "volt", "name": "Volt", "glow": "#54ff2e", "beta": false, "src": "assets/s-volt.webp"}, {"id": "cinderforge", "name": "Cinderforge", "glow": "#ff3b22", "beta": true, "src": "assets/s-cinderforge.webp"}, {"id": "groveguard", "name": "Groveguard", "glow": "#65dca1", "beta": true, "src": "assets/s-groveguard.webp"}, {"id": "cosmic", "name": "Cosmic", "glow": "#d687ff", "beta": true, "src": "assets/s-cosmic.webp"}, {"id": "sunforged", "name": "Sunforged", "glow": "#ffad2b", "beta": true, "src": "assets/s-sunforged.webp"}, {"id": "abyssal", "name": "Abyssal", "glow": "#39dcff", "beta": true, "src": "assets/s-abyssal.webp"}, {"id": "amethyst", "name": "Amethyst", "glow": "#c86dff", "beta": true, "src": "assets/s-amethyst.webp"}, {"id": "ivoryguard", "name": "Ivoryguard", "glow": "#fff0b8", "beta": true, "src": "assets/s-ivoryguard.webp"}, {"id": "reactor", "name": "Reactor", "glow": "#65ff32", "beta": true, "src": "assets/s-reactor.webp"}, {"id": "cyber", "name": "Cyber", "glow": "#7030df", "beta": false, "src": "assets/s-cyber.webp"}];window.__ASC__=["assets/asc-1.webp", "assets/asc-2.webp", "assets/asc-3.webp", "assets/asc-4.webp", "assets/asc-5.webp", "assets/asc-6.webp", "assets/asc-7.webp", "assets/asc-8.webp"];window.__DESC__=["assets/desc-1.webp", "assets/desc-2.webp", "assets/desc-3.webp", "assets/desc-4.webp", "assets/desc-5.webp", "assets/desc-6.webp", "assets/desc-7.webp", "assets/desc-8.webp"];window.__PLANETS__=["assets/p-3.webp", "assets/p-7.webp", "assets/p-12.webp", "assets/p-18.webp", "assets/p-24.webp", "assets/p-29.webp"];window.__CLIPS__={"hero.mp4": "clips/hero.mp4", "worlds.mp4": "clips/worlds.mp4", "mode-fly.mp4": "clips/mode-fly.mp4", "mode-arcade.mp4": "clips/mode-arcade.mp4", "mode-race.mp4": "clips/mode-race.mp4", "squad.mp4": "clips/squad.mp4"};</script>
 <script>
 (function(){
 "use strict";
@@ -695,14 +694,28 @@ function pick(s, btn){
   caseEl.style.setProperty("--accent", s.glow);
   caseImg.src = s.src; caseImg.alt = s.name + " suit";
   caseName.textContent = s.name;
+  var sub = caseName.nextElementSibling;
+  if(sub) sub.innerHTML = s.beta
+    ? "Upcoming &middot; on beta"
+    : "Suit &middot; matching helmet &middot; trail";
   [].forEach.call(document.querySelectorAll(".sw"), function(b){ b.setAttribute("aria-pressed", b === btn ? "true" : "false"); });
 }
 function swatch(s){
   var b = document.createElement("button");
-  b.className = "sw"; b.type = "button"; b.setAttribute("aria-pressed","false");
-  b.title = s.name; b.setAttribute("aria-label","Show the " + s.name + " suit in the case");
+  b.className = "sw" + (s.beta ? " upcoming" : ""); b.type = "button"; b.setAttribute("aria-pressed","false");
+  b.title = s.beta ? (s.name + " (upcoming)") : s.name;
+  b.setAttribute("aria-label", s.beta
+    ? ("Show the upcoming " + s.name + " suit in the case")
+    : ("Show the " + s.name + " suit in the case"));
+  if(s.beta) b.setAttribute("data-upcoming", "true");
   var i = document.createElement("img"); i.src = s.src; i.alt = ""; i.loading = "lazy";
   b.appendChild(i);
+  if(s.beta){
+    var tag = document.createElement("i");
+    tag.className = "sw-tag";
+    tag.textContent = "Soon";
+    b.appendChild(tag);
+  }
   b.addEventListener("click", function(){ pick(s, b); });
   return b;
 }
@@ -715,7 +728,11 @@ if(SUITS.length){
     B.forEach(function(s){ railB.appendChild(swatch(s)); });
   }
   var first = SUITS.filter(function(s){ return s.id === "seraph"; })[0] || SUITS[0];
-  pick(first, railA.querySelector('.sw[title="' + first.name + '"]'));
+  var firstBtn = null;
+  [].forEach.call(document.querySelectorAll(".sw"), function(b){
+    if(!firstBtn && b.title.indexOf(first.name) === 0) firstBtn = b;
+  });
+  pick(first, firstBtn);
   if(!RM){
     railA.style.animationDuration = (A.length*2.4)+"s";
     railB.style.animationDuration = (B.length*2.7)+"s";
