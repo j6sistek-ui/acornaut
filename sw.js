@@ -7,7 +7,7 @@
 // invisible forever. Deriving it from content means identical output keeps the
 // same name (no needless churn) and any change flushes the old generation in
 // the activate handler below.
-const CACHE = 'acornaut-b0a066fef187';
+const CACHE = 'acornaut-1c88a0579d34';
 
 // The installed app opens the ARCADE, so that is the shell worth precaching.
 // The landing page is a page you visit, not an app you launch: it is left to
