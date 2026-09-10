@@ -2,12 +2,12 @@
 // this file is a template; the version below is substituted at build time.
 //
 // It has to change on every release or installed apps keep serving the old
-// files: assets below are answered cache-first and never revalidated inside a
-// cache generation, so a changed asset under an unchanged cache name is
-// invisible forever. Deriving it from content means identical output keeps the
+// files. Marketing asset URLs also carry individual content hashes, so even
+// an older worker cannot serve yesterday's image for today's page.
+// Deriving the cache name from content and worker logic means identical output keeps the
 // same name (no needless churn) and any change flushes the old generation in
 // the activate handler below.
-const CACHE = 'acornaut-6034d1b50583';
+const CACHE = 'acornaut-a65b2beddfa0';
 
 // The installed app opens the ARCADE, so that is the shell worth precaching.
 // The landing page is a page you visit, not an app you launch: it is left to
@@ -24,14 +24,14 @@ const ASSETS = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting())
+    caches.open(CACHE).then((cache) => Promise.all(ASSETS.map((url) => fetch(new Request(url, {cache: 'reload'})).then((res) => { if (res.ok) return cache.put(url, res); }).catch(() => {})))).then(() => self.skipWaiting())
   );
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
+      Promise.all(keys.filter((k) => k.startsWith('acornaut-') && k !== CACHE).map((k) => caches.delete(k)))
     ).then(() => self.clients.claim())
   );
 });
@@ -58,7 +58,7 @@ self.addEventListener('fetch', (event) => {
   // refreshed on every successful fetch.
   if (req.mode === 'navigate' || path.endsWith('.webmanifest')) {
     event.respondWith(
-      fetch(req).then((res) => {
+      fetch(req, {cache: 'no-cache'}).then((res) => {
         if (res.ok) {
           const copy = res.clone();
           caches.open(CACHE).then((cache) => cache.put(req, copy));
